@@ -3,206 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D House Color Visualizer - Interior & Exterior</title>
+    <title>Interior Wall Paint Visualizer</title>
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; }
-        .container { display: flex; width: 100vw; height: 70vh; }
-        .house-view { flex: 1; height: 100%; position: relative; border-right: 2px solid #ddd; }
-        .controls {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
             display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            background: #ffffff;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            position: fixed;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        p.instruction {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Color Palette Section */
+        .palette-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .colors {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .color-box {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+        }
+
+        .color-box.active {
+            border-color: #2c3e50;
+            transform: scale(1.15);
+        }
+
+        /* 3D Interior Room Simulation */
+        .room-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            background: #e0e0e0;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            perspective: 1000px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .room {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        /* Walls */
+        .wall {
+            position: absolute;
+            cursor: pointer;
+            transition: background-color 0.3s ease, filter 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: rgba(0,0,0,0.3);
+            font-size: 1.2rem;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .wall:hover {
+            filter: brightness(0.95);
+        }
+
+        /* Back Wall */
+        #backWall {
+            width: 60%;
+            height: 70%;
+            top: 15%;
+            left: 20%;
+            background-color: #d1d8e0;
+            z-index: 1;
+        }
+
+        /* Left Wall */
+        #leftWall {
+            width: 20%;
+            height: 70%;
+            top: 15%;
+            left: 0;
+            transform: skewY(25deg);
+            transform-origin: top right;
+            background-color: #a5b1c2;
+            z-index: 2;
+        }
+
+        /* Right Wall */
+        #rightWall {
+            width: 20%;
+            height: 70%;
+            top: 15%;
+            right: 0;
+            transform: skewY(-25deg);
+            transform-origin: top left;
+            background-color: #778ca3;
+            z-index: 2;
+        }
+
+        /* Floor */
+        .floor {
+            position: absolute;
             bottom: 0;
             width: 100%;
-            box-sizing: border-box;
-            z-index: 10;
+            height: 15%;
+            background: #b2bec3;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: bottom;
+            border-top: 2px solid #888;
         }
-        .box { text-align: center; }
-        select, label { padding: 6px; font-size: 13px; margin-top: 5px; display: block; }
-        h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
-        .label-title { font-weight: bold; position: absolute; top: 10px; left: 20px; background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 4px; }
+
+        .selected-info {
+            font-size: 1rem;
+            color: #27ae60;
+            font-weight: bold;
+        }
     </style>
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
+    <h1>Interior Wall Paint Visualizer</h1>
+    <p class="instruction">First, select a color from the palette below, then click on the wall you want to paint.</p>
+
     <div class="container">
-        <!-- Interior House View -->
-        <div class="house-view" id="interior-container">
-            <div class="label-title">Interior View</div>
-        </div>
-        <!-- Exterior House View -->
-        <div class="house-view" id="exterior-container">
-            <div class="label-title">Exterior View</div>
-        </div>
-    </div>
-
-    <div class="controls">
-        <!-- Interior Controls -->
-        <div class="box">
-            <h3>Interior Categories & Colors</h3>
-            <select id="interiorCategory" onchange="updateInteriorShades()">
-                <option value="right-whites">Right Whites</option>
-                <option value="smart-neutrals">Smart Neutrals</option>
-                <option value="fresh-pastels">Fresh Pastels</option>
-                <option value="modern-midtones">Modern Midtones</option>
-                <option value="bold-accents">Bold Accents</option>
-            </select>
-            <select id="interiorColor" onchange="changeInteriorColor()">
-                <!-- Dynamic options populated via script -->
-            </select>
+        <!-- Color Palette -->
+        <div class="palette-section">
+            <label><strong>Select Color Palette:</strong> <span id="currentColorName" class="selected-info">No color selected</span></label>
+            <div class="colors">
+                <div class="color-box" style="background-color: #f5cd79;" onclick="selectColor('#f5cd79', 'Smart Natural (Sand)')" title="Smart Natural"></div>
+                <div class="color-box" style="background-color: #cf6a87;" onclick="selectColor('#cf6a87', 'Rose Pink')" title="Rose Pink"></div>
+                <div class="color-box" style="background-color: #546de5;" onclick="selectColor('#546de5', 'Royal Blue')" title="Royal Blue"></div>
+                <div class="color-box" style="background-color: #778beb;" onclick="selectColor('#778beb', 'Sky Mist')" title="Sky Mist"></div>
+                <div class="color-box" style="background-color: #e15f41;" onclick="selectColor('#e15f41', 'Terracotta')" title="Terracotta"></div>
+                <div class="color-box" style="background-color: #3dc1d3;" onclick="selectColor('#3dc1d3', 'Aqua Green')" title="Aqua Green"></div>
+                <div class="color-box" style="background-color: #f8c291;" onclick="selectColor('#f8c291', 'Soft Peach')" title="Soft Peach"></div>
+            </div>
         </div>
 
-        <!-- Exterior Controls -->
-        <div class="box">
-            <h3>Exterior Colors</h3>
-            <select id="exteriorColor" onchange="changeExteriorColor()">
-                <option value="#D2B48C">Tan - #D2B48C</option>
-                <option value="#B22222">JSW Brick Red - #B22222</option>
-                <option value="#708090">JSW Slate Grey - #708090</option>
-                <option value="#556B2F">JSW Olive Green - #556B2F</option>
-            </select>
+        <!-- 3D Interior Room View -->
+        <div class="room-container">
+            <div class="room">
+                <div id="leftWall" class="wall" onclick="paintWall('leftWall')">Left Wall</div>
+                <div id="backWall" class="wall" onclick="paintWall('backWall')">Back Wall</div>
+                <div id="rightWall" class="wall" onclick="paintWall('rightWall')">Right Wall</div>
+                <div class="floor"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // JSW Shade Categories Database
-        const interiorData = {
-            "right-whites": [
-                { name: "White Palace - 1191", hex: "#F5F5F0" },
-                { name: "Promised White - 1141", hex: "#F2F4F2" },
-                { name: "White Window - 1094", hex: "#EAECE9" },
-                { name: "Cotton Pods - 1074", hex: "#E5E4DE" },
-                { name: "White Inspiration - 1013", hex: "#F8F8F8" }
-            ],
-            "smart-neutrals": [
-                { name: "Raw Wood - 4071", hex: "#C8B195" },
-                { name: "Material Chic - 4091", hex: "#BFA58A" },
-                { name: "Beige Trail - 2103", hex: "#D6C2A9" },
-                { name: "Designer's Neutral - 4094", hex: "#A38A71" }
-            ],
-            "fresh-pastels": [
-                { name: "Candy Cloud - 2424", hex: "#F3D6E4" },
-                { name: "Desert View - 3031", hex: "#EAD6B8" },
-                { name: "Kesari Cream - 2063", hex: "#F4D06F" },
-                { name: "Marigold Petals - 2104", hex: "#FAD02C" }
-            ],
-            "modern-midtones": [
-                { name: "Umbra - 4215", hex: "#7E6B5D" },
-                { name: "Satin Sass - 5101", hex: "#A08A9E" },
-                { name: "Chrysanthemum Tea - 3613", hex: "#8E7253" },
-                { name: "Pewter Glint - 3343", hex: "#7C838A" }
-            ],
-            "bold-accents": [
-                { name: "Indie Music - 5203", hex: "#3B5998" },
-                { name: "Accent Orange - 5064", hex: "#FF6F00" },
-                { name: "Electric Blue - 5205", hex: "#0056B3" },
-                { name: "Peacock Strut - 5215", hex: "#004D40" }
-            ]
-        };
+        let activeColor = null;
 
-        let sceneInt, cameraInt, rendererInt, interiorRoom;
-        let sceneExt, cameraExt, rendererExt, exteriorHouseRoof, exteriorHouseWalls;
-
-        function init() {
-            // --- Interior Scene Setup ---
-            const containerInt = document.getElementById('interior-container');
-            sceneInt = new THREE.Scene();
-            sceneInt.background = new THREE.Color(0xfcfcfc);
-
-            cameraInt = new THREE.PerspectiveCamera(75, containerInt.clientWidth / containerInt.clientHeight, 0.1, 1000);
-            cameraInt.position.set(0, 0, 3.5);
-
-            rendererInt = new THREE.WebGLRenderer({ antialias: true });
-            rendererInt.setSize(containerInt.clientWidth, containerInt.clientHeight);
-            containerInt.appendChild(rendererInt.domElement);
-
-            const lightInt = new THREE.AmbientLight(0xffffff, 0.9);
-            sceneInt.add(lightInt);
-
-            // Interior Room Representation (Box)
-            const roomGeo = new THREE.BoxGeometry(3, 3, 3);
-            const roomMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F0, side: THREE.BackSide });
-            interiorRoom = new THREE.Mesh(roomGeo, roomMat);
-            sceneInt.add(interiorRoom);
-
-            // --- Exterior Scene Setup ---
-            const containerExt = document.getElementById('exterior-container');
-            sceneExt = new THREE.Scene();
-            sceneExt.background = new THREE.Color(0xe0f7fa);
-
-            cameraExt = new THREE.PerspectiveCamera(75, containerExt.clientWidth / containerExt.clientHeight, 0.1, 1000);
-            cameraExt.position.set(0, 3, 6);
-            cameraExt.lookAt(0, 0, 0);
-
-            rendererExt = new THREE.WebGLRenderer({ antialias: true });
-            rendererExt.setSize(containerExt.clientWidth, containerExt.clientHeight);
-            containerExt.appendChild(rendererExt.domElement);
-
-            const lightExt1 = new THREE.AmbientLight(0xffffff, 0.7);
-            sceneExt.add(lightExt1);
-            const lightExt2 = new THREE.DirectionalLight(0xffffff, 0.5);
-            lightExt2.position.set(5, 10, 7);
-            sceneExt.add(lightExt2);
-
-            // Exterior House Walls & Roof
-            const wallGeo = new THREE.BoxGeometry(3, 2, 3);
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xD2B48C });
-            exteriorHouseWalls = new THREE.Mesh(wallGeo, wallMat);
-            exteriorHouseWalls.position.y = 1;
-            sceneExt.add(exteriorHouseWalls);
-
-            const roofGeo = new THREE.ConeGeometry(2.5, 1.5, 4);
-            const roofMat = new THREE.MeshStandardMaterial({ color: 0x8b0000 });
-            exteriorHouseRoof = new THREE.Mesh(roofGeo, roofMat);
-            exteriorHouseRoof.position.y = 2.75;
-            exteriorHouseRoof.rotation.y = Math.PI / 4;
-            sceneExt.add(exteriorHouseRoof);
-
-            updateInteriorShades();
-            animate();
-        }
-
-        function updateInteriorShades() {
-            const categorySelect = document.getElementById('interiorCategory').value;
-            const colorSelect = document.getElementById('interiorColor');
-            colorSelect.innerHTML = "";
-
-            const shades = interiorData[categorySelect];
-            shades.forEach(shade => {
-                const opt = document.createElement('option');
-                opt.value = shade.hex;
-                opt.text = shade.name;
-                colorSelect.appendChild(opt);
+        // Function to select a color
+        function selectColor(colorCode, colorName) {
+            activeColor = colorCode;
+            
+            // Remove active class from all boxes
+            document.querySelectorAll('.color-box').forEach(box => {
+                box.classList.remove('active');
             });
-            changeInteriorColor();
+
+            // Add active class to the clicked box
+            event.target.classList.add('active');
+
+            // Update info text for the user
+            document.getElementById('currentColorName').innerText = `Selected Color: ${colorName}`;
         }
 
-        function changeInteriorColor() {
-            const color = document.getElementById('interiorColor').value;
-            interiorRoom.material.color.set(color);
+        // Function to apply color to a wall
+        function paintWall(wallId) {
+            if (!activeColor) {
+                alert("Please select a color from the palette above first!");
+                return;
+            }
+
+            const wall = document.getElementById(wallId);
+            wall.style.backgroundColor = activeColor;
         }
-
-        function changeExteriorColor() {
-            const color = document.getElementById('exteriorColor').value;
-            exteriorHouseWalls.material.color.set(color);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            // Gentle rotation for exterior house
-            exteriorHouseWalls.rotation.y += 0.005;
-            exteriorHouseRoof.rotation.y += 0.005;
-
-            rendererInt.render(sceneInt, cameraInt);
-            rendererExt.render(sceneExt, cameraExt);
-        }
-
-        window.onload = init;
     </script>
+
 </body>
 </html>
