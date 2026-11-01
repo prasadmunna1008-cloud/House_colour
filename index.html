@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Interior Wall & Room Paint Visualizer</title>
+    <title>JSW Paints Interior Visualizer</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -41,7 +41,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* Palette Control Layout */
+        /* Dropdown Control Section */
         .palette-section {
             display: flex;
             flex-direction: column;
@@ -50,63 +50,35 @@
             padding-bottom: 15px;
         }
 
-        .palette-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-            max-height: 180px;
-            overflow-y: auto;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: #fafafa;
+        .dropdown-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .color-card {
+        select {
+            padding: 10px 15px;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            flex-grow: 1;
+            background-color: #fafafa;
+            cursor: pointer;
+        }
+
+        .selected-preview {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .color-card:hover {
-            border-color: #2c3e50;
-            background: #f0f3f4;
-        }
-
-        .color-card.active {
-            border-color: #27ae60;
-            background: #e8f8f5;
-            box-shadow: 0 0 5px rgba(39, 174, 96, 0.4);
-        }
-
-        .color-swatch {
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
-            flex-shrink: 0;
-        }
-
-        .color-details {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.8rem;
-        }
-
-        .color-name {
+            gap: 10px;
             font-weight: bold;
-            color: #333;
         }
 
-        .color-code {
-            color: #777;
-            font-size: 0.75rem;
+        .color-swatch-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.2);
         }
 
         /* 3D Room Container */
@@ -188,7 +160,7 @@
             transform-origin: top left;
         }
 
-        /* Lower Wall / Floor Area */
+        /* Lower Wall / Skirting Area */
         #lowerWall {
             bottom: 0;
             left: 0;
@@ -207,19 +179,21 @@
 </head>
 <body>
 
-    <h1>Interior Wall & Room Paint Visualizer</h1>
-    <p class="instruction">Step 1: Choose a color from the professional palette below. Step 2: Click on any section (Upper, Left, Back, Right, or Lower wall) to paint it.</p>
+    <h1>JSW Paints Interior Wall & Room Visualizer</h1>
+    <p class="instruction">Step 1: Select an exact shade from the JSW shade card dropdown. Step 2: Click on any wall section (Upper, Left, Back, Right, or Lower) to paint it.</p>
 
     <div class="container">
-        <!-- Color Palette Dialog Box Section -->
+        <!-- Dropdown Selection Section -->
         <div class="palette-section">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <label><strong>Interior Color Catalog:</strong></label>
-                <span id="currentColorName" class="selected-status">No color selected</span>
-            </div>
-            
-            <div class="palette-grid" id="paletteGrid">
-                <!-- Colors will be dynamically loaded via script -->
+            <label><strong>Select Interior Shade from Catalog:</strong></label>
+            <div class="dropdown-wrapper">
+                <select id="colorDropdown" onchange="handleColorChange()">
+                    <option value="">-- Choose an Interior Shade --</option>
+                </select>
+                <div class="selected-preview">
+                    <div id="activeSwatch" class="color-swatch-box" style="background-color: #ffffff;"></div>
+                    <span id="currentColorName" class="selected-status">No color selected</span>
+                </div>
             </div>
         </div>
 
@@ -236,69 +210,5 @@
     </div>
 
     <script>
-        // Comprehensive interior color collection with codes
-        const interiorColors = [
-            { name: "Smart Natural", code: "#f5cd79", hex: "#f5cd79" },
-            { name: "Rose Pink", code: "#cf6a87", hex: "#cf6a87" },
-            { name: "Royal Blue", code: "#546de5", hex: "#546de5" },
-            { name: "Sky Mist", code: "#778beb", hex: "#778beb" },
-            { name: "Terracotta", code: "#e15f41", hex: "#e15f41" },
-            { name: "Aqua Green", code: "#3dc1d3", hex: "#3dc1d3" },
-            { name: "Soft Peach", code: "#f8c291", hex: "#f8c291" },
-            { name: "Crystal White", code: "#W-101", hex: "#f8f9fa" },
-            { name: "Berber Beige", code: "#2891", hex: "#d7ccc8" },
-            { name: "Almond Sand", code: "#2737", hex: "#d4b79c" },
-            { name: "Powder Blue", code: "#2366", hex: "#b3e5fc" },
-            { name: "Pista Green", code: "#02557", hex: "#c8e6c9" }
-        ];
-
-        let activeColor = null;
-        let activeColorName = "";
-
-        // Build the palette selection grid
-        function initPalette() {
-            const grid = document.getElementById('paletteGrid');
-            interiorColors.forEach((color, index) => {
-                const card = document.createElement('div');
-                card.className = 'color-card';
-                card.onclick = (e) => selectColor(color.hex, color.name, color.code, card);
-
-                card.innerHTML = `
-                    <div class="color-swatch" style="background-color: ${color.hex};"></div>
-                    <div class="color-details">
-                        <span class="color-name">${color.name}</span>
-                        <span class="color-code">Code: ${color.code}</span>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // Handle color selection
-        function selectColor(hexCode, name, code, element) {
-            activeColor = hexCode;
-            activeColorName = `${name} (${code})`;
-
-            document.querySelectorAll('.color-card').forEach(c => c.classList.remove('active'));
-            element.classList.add('active');
-
-            document.getElementById('currentColorName').innerText = `Selected: ${activeColorName}`;
-        }
-
-        // Apply color to target room surface
-        function paintSurface(surfaceId) {
-            if (!activeColor) {
-                alert("Please pick a color option from the interior color palette first!");
-                return;
-            }
-
-            const surface = document.getElementById(surfaceId);
-            surface.style.backgroundColor = activeColor;
-        }
-
-        // Initialize on load
-        window.onload = initPalette;
-    </script>
-
-</body>
-</html>
+        // Complete catalog of shades extracted from the JSW Paints Interior Shadecard PDF
+        const jsw
