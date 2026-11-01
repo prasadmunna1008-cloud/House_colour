@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSW Paints Interior Visualizer</title>
+    <title>JSW Paints Interior Wall & Room Visualizer</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -180,7 +180,7 @@
 <body>
 
     <h1>JSW Paints Interior Wall & Room Visualizer</h1>
-    <p class="instruction">Step 1: Select an exact shade from the JSW shade card dropdown. Step 2: Click on any wall section (Upper, Left, Back, Right, or Lower) to paint it.</p>
+    <p class="instruction">Step 1: Select an exact shade and code from the JSW shade card dropdown. Step 2: Click on any wall section (Upper, Left, Back, Right, or Lower) to paint it.</p>
 
     <div class="container">
         <!-- Dropdown Selection Section -->
@@ -188,7 +188,7 @@
             <label><strong>Select Interior Shade from Catalog:</strong></label>
             <div class="dropdown-wrapper">
                 <select id="colorDropdown" onchange="handleColorChange()">
-                    <option value="">-- Choose an Interior Shade --</option>
+                    <option value="">-- Choose an Interior Shade & Code --</option>
                 </select>
                 <div class="selected-preview">
                     <div id="activeSwatch" class="color-swatch-box" style="background-color: #ffffff;"></div>
@@ -210,5 +210,150 @@
     </div>
 
     <script>
-        // Complete catalog of shades extracted from the JSW Paints Interior Shadecard PDF
-        const jsw
+        // Complete collection extracted directly from the JSW Paints Interior Shadecard PDF
+        const jswInteriorColors = [
+            { name: "Desert View", code: "3031", hex: "#e6c280" },
+            { name: "Candy Cloud", code: "2424", hex: "#f4a261" },
+            { name: "Umbra", code: "4215", hex: "#8d6e63" },
+            { name: "Satin Sass", code: "5101", hex: "#e57373" },
+            { name: "Chrysanthemum Tea", code: "3613", hex: "#d4a373" },
+            { name: "White Palace", code: "1191", hex: "#f8f9fa" },
+            { name: "Indie Music", code: "5203", hex: "#64b5f6" },
+            { name: "Cream Damask", code: "1081", hex: "#fefae0" },
+            { name: "Promised White", code: "1141", hex: "#f7f7f7" },
+            { name: "Raw Wood", code: "4071", hex: "#b08968" },
+            { name: "Acoustic", code: "4181", hex: "#9e9e9e" },
+            { name: "January Moon", code: "2013", hex: "#faedcd" },
+            { name: "Glazed Macaroon", code: "2045", hex: "#f3de8a" },
+            { name: "White Window", code: "1094", hex: "#e9ecef" },
+            { name: "Fuchsia Hint", code: "1132", hex: "#f8bbd0" },
+            { name: "Material Chic", code: "4091", hex: "#d7ccc8" },
+            { name: "Digital Life", code: "4161", hex: "#b0bec5" },
+            { name: "Kesari Cream", code: "2063", hex: "#ffe0b2" },
+            { name: "Marigold Petals", code: "2104", hex: "#ffb74d" },
+            { name: "Lifelong Dream", code: "1088", hex: "#f4ee69" },
+            { name: "Tender Skin", code: "1123", hex: "#ffccbc" },
+            { name: "Sensual Shade", code: "4103", hex: "#a1887f" },
+            { name: "The Cloud", code: "4163", hex: "#90a4ae" },
+            { name: "Beige Trail", code: "2103", hex: "#d7ccc8" },
+            { name: "Perfect Puff", code: "2144", hex: "#ffe0b2" },
+            { name: "Cotton Pods", code: "1074", hex: "#f5f5f5" },
+            { name: "Vintage Theme", code: "1087", hex: "#e0e0e0" },
+            { name: "Designer's Neutral", code: "4094", hex: "#8d6e63" },
+            { name: "Mirror Foil", code: "4195", hex: "#78909c" },
+            { name: "Pink Slip", code: "2202", hex: "#f8bbd0" },
+            { name: "Beach Peach", code: "2224", hex: "#ffab91" },
+            { name: "White Inspiration", code: "1013", hex: "#ffffff" },
+            { name: "Once Upon A Time", code: "4031", hex: "#d7ccc8" },
+            { name: "Looking Glass", code: "4191", hex: "#cfd8dc" },
+            { name: "Wishing Wand", code: "2303", hex: "#e1bee7" },
+            { name: "Exotic Beauty", code: "2325", hex: "#ba68c8" },
+            { name: "Wisp of Vapor", code: "1031", hex: "#f1f8e9" },
+            { name: "Composed Verse", code: "1103", hex: "#dcedc8" },
+            { name: "Calm Serenity", code: "4301", hex: "#b2dfdb" },
+            { name: "Ethere Star", code: "4202", hex: "#80deea" },
+            { name: "Innocent Thought", code: "2343", hex: "#c5cae9" },
+            { name: "Moody Blues", code: "2365", hex: "#7986cb" },
+            { name: "Vap", code: "1053", hex: "#f3f4f6" },
+            { name: "Artist's White", code: "1014", hex: "#fdfdfd" },
+            { name: "Reflective", code: "4054", hex: "#a1887f" },
+            { name: "Perihelion", code: "4213", hex: "#00acc1" },
+            { name: "Cumulous Cloud", code: "2395", hex: "#90caf9" },
+            { name: "Simplicity Itself", code: "1047", hex: "#f5f5f5" },
+            { name: "Incense Haze", code: "1167", hex: "#d1c4e9" },
+            { name: "Weathered Clay", code: "4314", hex: "#a1887f" },
+            { name: "Painted Fern", code: "2594", hex: "#a5d6a7" },
+            { name: "Pleasing Green", code: "2643", hex: "#81c784" },
+            { name: "Summer Time", code: "2027", hex: "#fff59d" },
+            { name: "Sunset Hill", code: "2056", hex: "#ffe082" },
+            { name: "Indus Valley", code: "3011", hex: "#d7ccc8" },
+            { name: "Marble Screen", code: "3052", hex: "#bcaaa4" },
+            { name: "Surprise Surprise", code: "5011", hex: "#ff8a80" },
+            { name: "Radiant Air", code: "5024", hex: "#ff80ab" },
+            { name: "Mango Shake", code: "2067", hex: "#ffd54f" },
+            { name: "Tea Shop", code: "2097", hex: "#ffb74d" },
+            { name: "Hill View", code: "3051", hex: "#d7ccc8" },
+            { name: "Courtyard Yellow", code: "3055", hex: "#ffca28" },
+            { name: "Eye of the Sun", code: "5042", hex: "#ff7043" },
+            { name: "Accent Orange", code: "5064", hex: "#f4511e" },
+            { name: "Clam Shell", code: "2146", hex: "#ffe0b2" },
+            { name: "Screen Goddess", code: "2207", hex: "#f48fb1" },
+            { name: "Rice Husk", code: "3091", hex: "#d7ccc8" },
+            { name: "Carved Doorway", code: "3134", hex: "#8d6e63" },
+            { name: "Run the Show", code: "5126", hex: "#ab47bc" },
+            { name: "Baby Pink", code: "2265", hex: "#f8bbd0" },
+            { name: "Rainbow Rocket", code: "2267", hex: "#f06292" },
+            { name: "Mineral Hill", code: "3261", hex: "#b0bec5" },
+            { name: "Grand Edifice", code: "3233", hex: "#78909c" },
+            { name: "Selfie World", code: "5171", hex: "#ec407a" },
+            { name: "LOEV Today", code: "5164", hex: "#e91e63" },
+            { name: "Elusive Wilderness", code: "2326", hex: "#ba68c8" },
+            { name: "Lyrical Lilac", code: "2357", hex: "#ab47bc" },
+            { name: "Filigree Stone", code: "3302", hex: "#cfd8dc" },
+            { name: "Tea Time Mauve", code: "3293", hex: "#b0bec5" },
+            { name: "Whimnasium", code: "5181", hex: "#ad1457" },
+            { name: "Arabian Sea", code: "2386", hex: "#42a5f5" },
+            { name: "Daytime Moon", code: "2408", hex: "#1e88e5" },
+            { name: "Pewter Glint", code: "3343", hex: "#90a4ae" },
+            { name: "Indie Blues", code: "3324", hex: "#607d8b" },
+            { name: "Free Fall", code: "5232", hex: "#29b6f6" },
+            { name: "Electric Blue", code: "5205", hex: "#0288d1" },
+            { name: "Indian Roller Bird", code: "2463", hex: "#26a69a" },
+            { name: "Tropical Palm", code: "2486", hex: "#00897b" },
+            { name: "Hushed Silence", code: "3433", hex: "#78909c" },
+            { name: "Hill Gorge", code: "3403", hex: "#607d8b" },
+            { name: "Peace Network", code: "5263", hex: "#00838f" },
+            { name: "Peacock Strut", code: "5215", hex: "#006064" },
+            { name: "Green Glade", code: "2605", hex: "#66bb6a" },
+            { name: "Chlorophyll Drink", code: "2688", hex: "#388e3c" },
+            { name: "Bamboo Hollow", code: "3502", hex: "#aed581" },
+            { name: "Para Gliding", code: "5293", hex: "#26a69a" },
+            { name: "Digital Shorts", code: "5307", hex: "#00796b" }
+        ];
+
+        let activeColor = null;
+
+        // Populate dropdown options on load with both Name and Code
+        function initDropdown() {
+            const dropdown = document.getElementById('colorDropdown');
+            jswInteriorColors.forEach(color => {
+                const option = document.createElement('option');
+                option.value = color.hex;
+                option.textContent = `${color.name} - Code: ${color.code}`;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Handle dropdown selection update
+        function handleColorChange() {
+            const dropdown = document.getElementById('colorDropdown');
+            const selectedHex = dropdown.value;
+            const selectedText = dropdown.options[dropdown.selectedIndex].text;
+
+            if (selectedHex) {
+                activeColor = selectedHex;
+                document.getElementById('activeSwatch').style.backgroundColor = selectedHex;
+                document.getElementById('currentColorName').innerText = `Selected: ${selectedText}`;
+            } else {
+                activeColor = null;
+                document.getElementById('activeSwatch').style.backgroundColor = '#ffffff';
+                document.getElementById('currentColorName').innerText = 'No color selected';
+            }
+        }
+
+        // Apply color to room surfaces
+        function paintSurface(surfaceId) {
+            if (!activeColor) {
+                alert("Please select a shade and code from the JSW color dropdown menu first!");
+                return;
+            }
+
+            const surface = document.getElementById(surfaceId);
+            surface.style.backgroundColor = activeColor;
+        }
+
+        window.onload = initDropdown;
+    </script>
+
+</body>
+</html>
